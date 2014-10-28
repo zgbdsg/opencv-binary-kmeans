@@ -353,7 +353,7 @@ int oold_main()
 	return 0;
 }
 
-int main(){
+int hahamain(){
 	string filedir = "..\\data";//mat文件的文件目录，此处设置的当前目录
 	string filename = "ORL_32x32";//mat文件的文件名
 
@@ -366,16 +366,16 @@ int main(){
 	int nClass = FindNClass(readgnd);
 	cout << "Nclass:" << nClass << endl;
 
-	Mat lables = Mat::zeros(readfea.cols, 1, CV_32FC1);
+	Mat lables = Mat::zeros(readfea.cols, 1, CV_64FC1);
 
 	Mat fea = NormalizeFea(readfea).t();
 
 	float sum = 0;
 	for (int i = 0; i < 10; i++){
-		hartigan(fea, nClass, lables, 100);
-		cout << lables<<endl;
+		hartigan(fea, nClass, lables, 10);
+		//cout << lables<<endl;
 		reindex(lables);
-		cout << lables << endl;
+		//cout << lables << endl;
 
 		Mat gndTranse = readgnd.t();
 		float AC = Evaluate(lables, gndTranse);
@@ -406,6 +406,17 @@ int main(){
 
 	//hartigan(tmp2, 3, tmp2, 1);
 	
+	int a = 0;
+	cin >> a;
+
+	return 0;
+}
+
+int main(){
+	int x = 7;
+	int t = x >> 2;
+	cout << (t%2) << endl;
+
 	int a = 0;
 	cin >> a;
 

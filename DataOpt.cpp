@@ -14,12 +14,12 @@ Mat DataRead(string datapath, string filename, string matname)
 	double *ReadArray = (double*)mxGetData(pMxArray);
 	int cols = mxGetM(pMxArray);//行列存储方式不一致，需注意
 	int rows = mxGetN(pMxArray);
-	Mat ReadMat(rows, cols, CV_32FC1);  //此处主要是自己工程其他模块需使用float型的
+	Mat ReadMat(rows, cols, CV_64FC1);  //此处主要是自己工程其他模块需使用float型的
 	for (int i = 0; i<rows; i++)
 	{
 		for (int j = 0; j<cols; j++)
 		{
-			ReadMat.at<float>(i, j) = (float)ReadArray[i*cols + j];
+			ReadMat.at<double>(i, j) = (double)ReadArray[i*cols + j];
 		}
 	}
 	mxDestroyArray(pMxArray);
@@ -79,12 +79,12 @@ int DataSave(Mat& SrcMat, string datapath, string filename, string matname)
 /*找到不同类别的个数*/
 int FindNClass(Mat& data)
 {
-	vector<float> vec;
+	vector<double> vec;
 	int nclass = 0;
 	for (int i = 0; i < data.cols; i++)
 	{
 		int j = 0;
-		float contain = data.at<float>(0, i);
+		double contain = data.at<double>(0, i);
 
 		int size = vec.size();
 		for (j = 0; j < size; j++)
@@ -113,13 +113,13 @@ int FindNClass(Mat& data)
 }
 
 /*找出向量中不同类别的类标记*/
-vector<float> Unique(Mat& data)
+vector<double> Unique(Mat& data)
 {
-	vector<float> vec;
+	vector<double> vec;
 	for (int i = 0; i < data.cols; i++)
 	{
 		int j = 0;
-		float contain = data.at<float>(0, i);
+		double contain = data.at<double>(0, i);
 
 		int size = vec.size();
 		for (j = 0; j < size; j++)
@@ -150,17 +150,17 @@ void reindex(Mat& data)
 	assert(data.cols == 1);
 
 	Mat dataTranse = data.t();
-	vector<float> labels = Unique(dataTranse);
+	vector<double> labels = Unique(dataTranse);
 
 	for (int i = 0; i < data.rows; i++)
 	{
-		float now = data.at<float>(i, 0);
+		double now = data.at<double>(i, 0);
 
 		for (int j = 0; j < labels.size(); j++)
 		{
 			if (now == labels[j])
 			{
-				data.at<float>(i, 0) = j + 1;
+				data.at<double>(i, 0) = j + 1;
 				break;
 			}
 		}

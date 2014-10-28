@@ -18,7 +18,7 @@ using namespace std;
 int DataSave(Mat& SrcMat, string datapath, string filename, string matname);  /*保存数据到mat*/
 Mat DataRead(string datapath, string filename, string matname);		/*从mat中读取数据*/
 int FindNClass(Mat& data);     /*矩阵中不同类别数*/
-vector<float> Unique(Mat& data);    /*矩阵中的不同类别的向量*/
+vector<double> Unique(Mat& data);    /*矩阵中的不同类别的向量*/
 Mat NormalizeFea(Mat& fea, int row = 1);    /*单位化矩阵*/
 Mat BestMap(Mat& L1, Mat& L2);    /*最优分配的二部图匹配*/
 float Evaluate(Mat& labels, Mat& gnd);	/*计算准确率，返回AC*/

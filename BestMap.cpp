@@ -19,9 +19,9 @@ Mat BestMap(Mat& L1, Mat& L2)
 
 	Mat t_L1 = L1.t();
 	Mat t_L2 = L2.t();
-	vector<float> label1 = Unique(t_L1);
+	vector<double> label1 = Unique(t_L1);
 	int nclass1 = FindNClass(t_L1);
-	vector<float> label2 = Unique(t_L2);
+	vector<double> label2 = Unique(t_L2);
 	int nclass2 = FindNClass(t_L2);
 
 	int nclass = (nclass1 >= nclass2) ? nclass1 : nclass2;
@@ -38,7 +38,7 @@ Mat BestMap(Mat& L1, Mat& L2)
 			int effort_ij = 0;
 			for (int k = 0; k < L1.rows; k++)
 			{
-				if (L1.at<float>(k, 0) == label1[i] && L2.at<float>(k, 0) == label2[j])
+				if (L1.at<double>(k, 0) == label1[i] && L2.at<double>(k, 0) == label2[j])
 					effort_ij++;
 				//cout << effort_ij<<" ";
 			}
@@ -83,14 +83,14 @@ Mat BestMap(Mat& L1, Mat& L2)
 	/*hungarian 算法 找出最短匹配即准确率最高的赋值*/
 	Munkres m;
 	m.solve(G_Effort);
-	Mat matchAnswer(nclass1, 1, CV_32FC1);
+	Mat matchAnswer(nclass1, 1, CV_64FC1);
 
 	for (int row = 0; row < nclass1; row++) {
 		for (int col = 0; col < nclass2; col++) {
 			//std::cout.width(2);
 			//std::cout << G_Effort(row, col) << ",";
 			if (G_Effort(row, col) == 0){
-				matchAnswer.at<float>(col, 0) = row;
+				matchAnswer.at<double>(col, 0) = row;
 				//cout<<"   match:  "<< col+1 <<"   "<<row+1  << "  ";
 			}
 
@@ -103,10 +103,10 @@ Mat BestMap(Mat& L1, Mat& L2)
 		//std::cout << std::endl;
 	}
 
-	Mat newl2(L2.rows, L2.cols, CV_32FC1);
+	Mat newl2(L2.rows, L2.cols, CV_64FC1);
 	for (int i = 0; i < L2.rows; i++)
 	{
-		float tmp = L2.at<float>(i, 0);
+		double tmp = L2.at<double>(i, 0);
 		int ind = 0;
 		for (int j = 0; j < label2.size(); j++)
 		{
@@ -116,7 +116,7 @@ Mat BestMap(Mat& L1, Mat& L2)
 				break;
 			}
 		}
-		newl2.at<float>(i, 0) = label1[matchAnswer.at<float>(ind, 0)];
+		newl2.at<double>(i, 0) = label1[matchAnswer.at<double>(ind, 0)];
 	}
 	return newl2;
 }

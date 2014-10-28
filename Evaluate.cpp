@@ -12,7 +12,7 @@ float Evaluate(Mat& labels, Mat& gnd)
 	int sum = 0;
 	for (int i = 0; i < length; i++)
 	{
-		if (newlabel.at<float>(i, 0) == gnd.at<float>(i, 0))
+		if (newlabel.at<double>(i, 0) == gnd.at<double>(i, 0))
 			sum++;
 	}
 

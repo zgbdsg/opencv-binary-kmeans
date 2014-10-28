@@ -7,7 +7,7 @@ Mat NormalizeFea(Mat& fea, int row)
 	if (row == 1)
 	{
 		int nsmp = fea.cols;
-		float* powersum = new float[nsmp];
+		double* powersum = new double[nsmp];
 
 
 		/*计算每行的平方和*/
@@ -17,7 +17,7 @@ Mat NormalizeFea(Mat& fea, int row)
 			for (int j = 0; j < fea.rows; j++)
 			{
 				//cout << fea.at<float>(i, j) << endl;
-				powersum[i] = powersum[i] + fea.at<float>(j, i)*fea.at<float>(j, i);
+				powersum[i] = powersum[i] + fea.at<double>(j, i)*fea.at<double>(j, i);
 			}
 
 			if (powersum[i] == 0)
@@ -27,11 +27,11 @@ Mat NormalizeFea(Mat& fea, int row)
 		cout << powersum[1] << endl;*/
 
 		/*单位化*/
-		Mat diags = Mat::zeros(nsmp, nsmp, CV_32FC1);
+		Mat diags = Mat::zeros(nsmp, nsmp, CV_64FC1);
 
 		for (int i = 0; i < nsmp; i++)
 		{
-			diags.at<float>(i, i) = 1.0 / sqrt(powersum[i]);
+			diags.at<double>(i, i) = 1.0 / sqrt(powersum[i]);
 			//cout << diags.at<float>(i, i) << endl;
 		}
 
@@ -49,7 +49,7 @@ Mat NormalizeFea(Mat& fea, int row)
 	else
 	{
 		int nsmp = fea.rows;
-		float* powersum = new float[nsmp];
+		double* powersum = new double[nsmp];
 
 		/*计算每行的平方和*/
 		for (int i = 0; i < nsmp; i++)
@@ -57,7 +57,7 @@ Mat NormalizeFea(Mat& fea, int row)
 			powersum[i] = 0;
 			for (int j = 0; j < fea.cols; j++)
 			{
-				powersum[i] = powersum[i] + fea.at<float>(i, j)*fea.at<float>(i, j);
+				powersum[i] = powersum[i] + fea.at<double>(i, j)*fea.at<double>(i, j);
 			}
 
 			if (powersum[i] == 0)
@@ -65,11 +65,11 @@ Mat NormalizeFea(Mat& fea, int row)
 		}
 
 		/*单位化*/
-		Mat diags = Mat::zeros(nsmp, nsmp, CV_32FC1);
+		Mat diags = Mat::zeros(nsmp, nsmp, CV_64FC1);
 
 		for (int i = 0; i < nsmp; i++)
 		{
-			diags.at<float>(i, i) = 1.0 / sqrt(powersum[i]);
+			diags.at<double>(i, i) = 1.0 / sqrt(powersum[i]);
 		}
 		newfea = diags * fea;
 
