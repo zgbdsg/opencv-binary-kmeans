@@ -166,3 +166,26 @@ void reindex(Mat& data)
 		}
 	}
 }
+
+Mat saveDataAsBinary(Mat& data){
+	int realcols = data.cols / 8;
+	if (data.cols % 8 != 0)
+		realcols += 1;
+
+	Mat result = Mat::zeros(data.rows, realcols, CV_16SC1);
+	for (int i = 0; i < data.rows; i++){
+		for (int j = 0; j < realcols;j++){
+
+			int round = (8 < (data.cols - 8 * realcols)) ? 8 : (data.cols - 8 * realcols);
+
+			for (int k = 0; k < round; k++){
+				int t = data.at<float>(i, 8 * realcols+k);
+
+				result.at<int>(i, j) += pow(t, 2);
+			}
+
+		}
+	}
+
+	return result;
+}

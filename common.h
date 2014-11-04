@@ -92,3 +92,10 @@ private:
 	const Mat& data;
 	const Mat& centers;
 };
+
+void BitHartigan(Mat& data, int n, int k, Mat& lables, int round);
+Mat MatBinaryDistance(Mat& x, Mat& y);
+Mat MatBitDistance(Mat& x, Mat& y);
+void updateCenters(Mat& data, Mat& index, Mat& centers, int n);
+Mat ToBinary(Mat& data);
+Mat saveDataAsBinary(Mat& data);

@@ -1,6 +1,51 @@
 #include"common.h"
 
-void BitHartigan(Mat& data, int n, int k, Mat& lables, int round){
+
+void BitHartigan(unsigned char**& data, int rows, int cols, int k, unsigned char*& lables, int round){
+	// centers cols is 8 size of data
+	int* random = new int[k];
+	int* randIndex = new int[k];
+	int* cCount = new int[k];
+	double** centers = new double*[k];
+
+	for (int i = 0; i < k; i++){
+		centers[i] = new double[cols];
+	}
+
+	for (int i = 0; i < k; i++){
+		cCount[i] = 0;
+		random[i] = i;
+		randIndex[i] = i;
+
+		for (int a = 0; a < cols; a++){
+			centers[i][a] = getDataAt(data, i, a);
+		}
+	}
+
+
+}
+
+
+unsigned char getDataAt(unsigned char**& data, int row, int cols){
+	int block = cols / 8;
+	int ind = cols % 8;
+
+	unsigned char result = data[row][block] >> ind;
+	return result % 2;
+}
+
+unsigned char** BitDistance(unsigned char**& data,int drow,int dcol,double**& centers,int crow,int ccol){
+	double** tmpLeft = new double*[drow];
+	for (int i = 0; i < drow; i++){
+		tmpLeft[i] = new double[crow];
+	}
+
+	double* tmpXPowerSum = new double[drow];
+	double* tmpYPower = new double[crow];
+
+	for ()
+}
+void oldBitHartigan(Mat& data, int n, int k, Mat& lables, int round){
 	int row = data.rows;
 	int colum = data.cols;
 	int* random = new int[k];
@@ -199,7 +244,7 @@ void updateCenters(Mat& data,Mat& index,Mat& centers,int n){
 }
 
 Mat ToBinary(Mat& data){
-	Mat binaryMat = Mat::zeros(data.rows, 8 * data.cols, data.type);
+	Mat binaryMat = Mat::zeros(data.rows, 8 * data.cols, CV_16SC1);
 	for (int i = 0; i < data.rows; i++){
 		for (int j = 0; j < 8 * data.cols; j++){
 			int block = j / 8;

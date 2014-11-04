@@ -413,9 +413,61 @@ int hahamain(){
 }
 
 int main(){
-	int x = 7;
-	int t = x >> 2;
-	cout << (t%2) << endl;
+	clock_t start, stop;
+	string filedir = "..\\data";//mat文件的文件目录，此处设置的当前目录
+	string filename = "ORL_32x32";//mat文件的文件名
+
+	cout << "Start reading mat file!" << endl;
+	Mat readfea = DataRead(filedir, filename, "fea");
+	cout << readfea.cols << " " << readfea.rows << endl;
+
+	Mat readgnd = DataRead(filedir, filename, "gnd");
+	cout << readgnd.cols << " " << readgnd.rows << endl;
+
+	/*计算 nclass*/
+	int nclass = FindNClass(readgnd);
+	cout << "nclass is " << nclass << endl;
+	Mat fea = NormalizeFea(readfea).t();
+
+
+	/*使用 FLANN 提取属性*/
+	Mat newfea;
+	int knnsize = fea.rows / 20;
+
+	fea.convertTo(fea, CV_32FC1);
+	flann::Index flann_index(fea, cv::flann::LinearIndexParams(), cvflann::FLANN_DIST_MANHATTAN);
+
+	Mat indices(fea.rows, knnsize, CV_32FC1);
+	Mat dists(fea.rows, knnsize, CV_32FC1);
+	//Mat searchrow = fea.row(i);
+	start = clock();
+	flann_index.knnSearch(fea, indices, dists, knnsize, cv::flann::SearchParams(64));
+	stop = clock();
+	cout << "FLANN :" << 1.0*(stop - start) / CLOCKS_PER_SEC << "  seconds" << endl;
+
+	flann_index.save("index");
+	indices.convertTo(indices, CV_64FC1);
+	//cout << indices << endl;
+	dists.convertTo(dists, CV_64FC1);
+	newfea = indices.clone();
+
+	Mat linefea(fea.rows, fea.cols, CV_32FC1);
+	linefea = Scalar::all(0);
+
+	for (int i = 0; i < newfea.rows; i++)
+	{
+		for (int j = 0; j < newfea.cols; j++)
+		{
+			int t = newfea.at<float>(i, j);
+			//assert(t >= 0 && t< 11554);
+			//if (t >= 0 && t< newfea.cols)
+			//linefea.at<float>(i, t) = exp(-pow(dists.at<float>(i, j), 2));
+			linefea.at<float>(i, t) = 1;
+		}
+	}
+
+	Mat result = saveDataAsBinary(linefea);
+	cout << result << endl;
 
 	int a = 0;
 	cin >> a;
