@@ -38,64 +38,16 @@ Mat matMinus(Mat& a, Mat& b);
 
 void MatMin(Mat& data, Mat& index, Mat& dist);
 
-static void generateRandomCenter(const vector<Vec2f>& box, float* center, RNG& rng);
-class KMeansDistanceComputer : public ParallelLoopBody
-{
-public:
-	KMeansDistanceComputer(double *_distances,
-		int *_labels,
-		const Mat& _data,
-		const Mat& _centers)
-		: distances(_distances),
-		labels(_labels),
-		data(_data),
-		centers(_centers)
-	{
-	}
 
-	void operator()(const Range& range) const
-	{
-		const int begin = range.start;
-		const int end = range.end;
-		const int K = centers.rows;
-		const int dims = centers.cols;
 
-		const float *sample;
-		for (int i = begin; i<end; ++i)
-		{
-			sample = data.ptr<float>(i);
-			int k_best = 0;
-			double min_dist = DBL_MAX;
+//Bithartigan
+void BitHartigan(unsigned char**& data, int rows, int cols, int k, int*& lables, int round);
+unsigned char getDataAt(unsigned char**& data, int row, int cols);
+unsigned char getVectorDataAt(unsigned char*& data, int row, int cols);
+double* VectorBitDistance(unsigned char*& data, int dcol, double**& centers, int crow, int ccol);
+double** BitDistance(unsigned char**& data, int drow, int dcol, double**& centers, int crow, int ccol);
 
-			for (int k = 0; k < K; k++)
-			{
-				const float* center = centers.ptr<float>(k);
-				const double dist = normL2Sqr_(sample, center, dims);
-
-				if (min_dist > dist)
-				{
-					min_dist = dist;
-					k_best = k;
-				}
-			}
-
-			distances[i] = min_dist;
-			labels[i] = k_best;
-		}
-	}
-
-private:
-	KMeansDistanceComputer& operator=(const KMeansDistanceComputer&); // to quiet MSVC
-
-	double *distances;
-	int *labels;
-	const Mat& data;
-	const Mat& centers;
-};
-
-void BitHartigan(Mat& data, int n, int k, Mat& lables, int round);
-Mat MatBinaryDistance(Mat& x, Mat& y);
-Mat MatBitDistance(Mat& x, Mat& y);
 void updateCenters(Mat& data, Mat& index, Mat& centers, int n);
 Mat ToBinary(Mat& data);
 Mat saveDataAsBinary(Mat& data);
+unsigned char** converToBinary(Mat& data);

@@ -172,16 +172,49 @@ Mat saveDataAsBinary(Mat& data){
 	if (data.cols % 8 != 0)
 		realcols += 1;
 
+	cout<<"cols:	"<<data.cols << "ralcols:	" << realcols << endl;
+
 	Mat result = Mat::zeros(data.rows, realcols, CV_16SC1);
 	for (int i = 0; i < data.rows; i++){
 		for (int j = 0; j < realcols;j++){
 
-			int round = (8 < (data.cols - 8 * realcols)) ? 8 : (data.cols - 8 * realcols);
+			int round = ((data.cols - 8 * j)>8) ? 8 : (data.cols - 8 * j);
 
 			for (int k = 0; k < round; k++){
-				int t = data.at<float>(i, 8 * realcols+k);
+				int t = data.at<float>(i, 8 * j+k);
 
-				result.at<int>(i, j) += pow(t, 2);
+				if (t == 1)
+					result.at<int>(i, j) += pow(2, 7-k);
+			}
+
+		}
+	}
+
+	return result;
+}
+
+unsigned char** converToBinary(Mat& data){
+	int realcols = data.cols / 8;
+	if (data.cols % 8 != 0)
+		realcols += 1;
+
+	cout << "cols:	" << data.cols << "ralcols:	" << realcols << endl;
+
+	unsigned char** result = new unsigned char*[data.rows];
+	for (int i = 0; i < data.rows; i++){
+		result[i] = new unsigned char[realcols];
+	}
+
+	for (int i = 0; i < data.rows; i++){
+		for (int j = 0; j < realcols; j++){
+
+			int round = ((data.cols - 8 * j)>8) ? 8 : (data.cols - 8 * j);
+
+			for (int k = 0; k < round; k++){
+				int t = data.at<float>(i, 8 * j + k);
+
+				if (t == 1)
+					result[i][j] += pow(2, 7 - k);
 			}
 
 		}

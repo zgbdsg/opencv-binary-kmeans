@@ -98,6 +98,7 @@ void hartigan(Mat& data, int k, Mat& lables, int round){
 					//cout << cCount[cluster2] << endl;
 
 					Mat tmp = (centers.row(cluster2)*cCount[cluster2] + vx) / (cCount[cluster2] + 1);
+					tmp.copyTo(centers.row(cluster2));
 					
 					cCount[cluster2] = cCount[cluster2] + 1;
 					index.at<double>(id, 0) = cluster2;

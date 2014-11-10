@@ -463,11 +463,32 @@ int main(){
 			//if (t >= 0 && t< newfea.cols)
 			//linefea.at<float>(i, t) = exp(-pow(dists.at<float>(i, j), 2));
 			linefea.at<float>(i, t) = 1;
+			//cout << i << "\t" << t << "\t";
 		}
+
+		//cout << endl;
 	}
 
-	Mat result = saveDataAsBinary(linefea);
-	cout << result << endl;
+	//Mat result = saveDataAsBinary(linefea);
+	unsigned char** result = converToBinary(linefea);
+	int realcols = linefea.cols / 8;
+	if (linefea.cols % 8 != 0)
+		realcols += 1;
+
+	int* labs = new int[linefea.rows];
+
+	BitHartigan(result, linefea.rows, linefea.cols, nclass, labs, 10);
+	Mat lables = Mat::zeros(readfea.cols, 1, CV_64FC1);
+	for (int i = 0; i < linefea.rows; i++){
+		lables.at<double>(i, 0) = labs[i];
+	}
+
+	reindex(lables);
+
+	Mat gndTranse = readgnd.t();
+	float AC = Evaluate(lables, gndTranse);
+	//cout << "FLANN  AC is  " << AC << endl;
+	cout << AC << endl;
 
 	int a = 0;
 	cin >> a;
