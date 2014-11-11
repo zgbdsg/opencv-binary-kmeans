@@ -15,6 +15,11 @@
 using namespace cv;
 using namespace std;
 
+//#ifndef TEST1H
+//#define TEST1H
+//	static int** dataMap = new int*[256];
+//#endif
+
 int DataSave(Mat& SrcMat, string datapath, string filename, string matname);  /*保存数据到mat*/
 Mat DataRead(string datapath, string filename, string matname);		/*从mat中读取数据*/
 int FindNClass(Mat& data);     /*矩阵中不同类别数*/
@@ -41,13 +46,18 @@ void MatMin(Mat& data, Mat& index, Mat& dist);
 
 
 //Bithartigan
-void BitHartigan(unsigned char**& data, int rows, int cols, int k, int*& lables, int round);
-unsigned char getDataAt(unsigned char**& data, int row, int cols);
-unsigned char getVectorDataAt(unsigned char*& data, int row, int cols);
-double* VectorBitDistance(unsigned char*& data, int dcol, double**& centers, int crow, int ccol);
-double** BitDistance(unsigned char**& data, int drow, int dcol, double**& centers, int crow, int ccol);
+void BitHartigan(unsigned char**& data, int rows, int cols, int k, int*& lables, int round, int**& dataMap);
+//unsigned char getDataAt(unsigned char**& data, int row, int cols);
+//unsigned char getVectorDataAt(unsigned char*& data, int row, int cols);
+double* VectorBitDistance(unsigned char*& data, int dcol, double**& centers, int crow, int ccol, int**& dataMap);
+double** BitDistance(unsigned char**& data, int drow, int dcol, double**& centers, int crow, int ccol, int**& dataMap);
 
 void updateCenters(Mat& data, Mat& index, Mat& centers, int n);
 Mat ToBinary(Mat& data);
 Mat saveDataAsBinary(Mat& data);
 unsigned char** converToBinary(Mat& data);
+
+
+void Kmeans(Mat& data, int k, Mat& lables, int round);
+void BitKmeans(unsigned char**& data, int rows, int cols, int k, int*& lables, int round,int**& dataMap);
+double** KmeansBitDistance(unsigned char**& data, int drow, int dcol, double**& centers, int crow, int ccol, int**& dataMap);

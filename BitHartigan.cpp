@@ -1,30 +1,57 @@
 #include"common.h"
 
 
-void BitHartigan(unsigned char**& data, int rows, int cols, int k, int*& lables, int round){
+void BitHartigan(unsigned char**& data, int rows, int cols, int k, int*& lables, int round, int**& dataMap){
 	// centers cols is 8 size of data
 	int* random = new int[k];
 	int* randIndex = new int[k];
 	int* cCount = new int[k];
 	double** centers = new double*[k];
 
+	set<int> randomSet;
+
 	// init centers
 	for (int i = 0; i < k; i++){
 		centers[i] = new double[cols];
 	}
 
+	//for (int i = 0; i < cols; i++){
+	//	int tmp = getDataAt(data, 0, i);
+	//	cout << tmp;
+	//}
+	//cout << endl;
+
 	for (int i = 0; i < k; i++){
 		cCount[i] = 0;
-		random[i] = i;
+		//random[i] = i;
 		randIndex[i] = i;
 
-		for (int a = 0; a < cols; a++){
-			centers[i][a] = getDataAt(data, i, a);
+		int tmp = rand() % rows;
+
+		if (randomSet.find(tmp) == randomSet.end()){
+			random[i] = tmp;
+
+			for (int a = 0; a < cols; a++){
+				int block = a / 8;
+				int ind = a % 8;
+				centers[i][a] = dataMap[data[tmp][block]][ind];
+				//centers[i][a] = getDataAt(data, tmp, a);
+			}
+
+			//data.row(random[i]).copyTo(centers.row(i));
 		}
+		else{
+			i--;
+		}
+
+		//for (int a = 0; a < cols; a++){
+		//	centers[i][a] = getDataAt(data, i, a);
+		//}
 	}
 
 	//compute distatnce between centers and data
-	double** distances = BitDistance(data, rows, cols, centers, k, cols);
+
+	double** distances = BitDistance(data, rows, cols, centers, k, cols,dataMap);
 
 	int* index = new int[rows];
 	double* dist = new double[rows];
@@ -44,10 +71,10 @@ void BitHartigan(unsigned char**& data, int rows, int cols, int k, int*& lables,
 		index[i] = minIndex;
 	}
 
-	for (int i = 0; i < rows; i++)
-		cout << index[i] << "\t";
+	//for (int i = 0; i < rows; i++)
+	//	cout << index[i] << "\t";
 
-	cout << endl;
+	//cout << endl;
 	//update centers
 	for (int i = 0; i < k; i++){
 		cCount[i] = 0;
@@ -58,19 +85,27 @@ void BitHartigan(unsigned char**& data, int rows, int cols, int k, int*& lables,
 
 	for (int j = 0; j < rows; j++){
 		int a = index[j];
-			cCount[a] ++;
+		cCount[a] ++;
 
 		for (int x = 0; x < cols; x++){
-			centers[a][x] += getDataAt(data, j, x);
+			int block = x / 8;
+			int ind = x % 8;
+			centers[a][x] += dataMap[data[j][block]][ind];
+			//centers[a][x] += getDataAt(data, j, x);
 		}
 	}
 
+	//for (int i = 0; i < cols; i++)
+	//	cout << centers[0][i] << "\t";
+
+	//cout << endl;
 	for (int i = 0; i < k; i++){
 
 		for (int j = 0; j < cols; j++){
 			centers[i][j] = centers[i][j]/cCount[i];
 		}
 	}
+
 
 	//begin iteration
 
@@ -88,12 +123,17 @@ void BitHartigan(unsigned char**& data, int rows, int cols, int k, int*& lables,
 				}
 
 				for (int a = 0; a < cols; a++){
-					centers[cluster1][a] = (vc1[a]*cCount[cluster1] - getDataAt(data,id,a)) / (cCount[cluster1] - 1.0);
+					int block = a / 8;
+					int ind = a % 8;
+
+					int tmp = dataMap[data[id][block]][ind];
+					centers[cluster1][a] = (vc1[a] * cCount[cluster1] - tmp) / (cCount[cluster1] - 1.0);
+					//centers[cluster1][a] = (vc1[a]*cCount[cluster1] - getDataAt(data,id,a)) / (cCount[cluster1] - 1.0);
 				}
 
 				cCount[cluster1] = cCount[cluster1] - 1;
 
-				double* dis = VectorBitDistance(vx, cols, centers, k, cols);
+				double* dis = VectorBitDistance(vx, cols, centers, k, cols,dataMap);
 				double* deltaCost = new double[k];
 
 				for (int i = 0; i < k; i++){
@@ -118,7 +158,12 @@ void BitHartigan(unsigned char**& data, int rows, int cols, int k, int*& lables,
 				}
 				else{
 					for (int a = 0; a < cols; a++){
-						centers[cluster2][a] = (centers[cluster2][a] * cCount[cluster2] + getDataAt(data, id, a)) / (cCount[cluster2] + 1.0);
+						int block = a / 8;
+						int ind = a % 8;
+
+						int tmp = dataMap[data[id][block]][ind];
+						centers[cluster2][a] = (centers[cluster2][a] * cCount[cluster2] + tmp) / (cCount[cluster2] + 1.0);
+						//centers[cluster2][a] = (centers[cluster2][a] * cCount[cluster2] + getDataAt(data, id, a)) / (cCount[cluster2] + 1.0);
 					}
 
 					cCount[cluster2] = cCount[cluster2] + 1;
@@ -140,7 +185,10 @@ void BitHartigan(unsigned char**& data, int rows, int cols, int k, int*& lables,
 			cCount[a] ++;
 
 			for (int x = 0; x < cols; x++){
-				centers[a][x] += getDataAt(data, j, x);
+				int block = x / 8;
+				int ind = x % 8;
+				centers[a][x] += dataMap[data[j][block]][ind];
+				//centers[a][x] += getDataAt(data, j, x);
 			}
 		}
 
@@ -159,24 +207,25 @@ void BitHartigan(unsigned char**& data, int rows, int cols, int k, int*& lables,
 }
 
 
-unsigned char getDataAt(unsigned char**& data, int row, int cols){
-	int block = cols / 8;
-	int ind = cols % 8;
+//unsigned char getDataAt(unsigned char**& data, int row, int cols){
+//	int block = cols / 8;
+//	int ind = cols % 8;
+//
+//	unsigned char result = data[row][block] >> ind;
+//	//cout << result % 2 << endl;
+//	return result % 2;
+//}
+//
+//unsigned char getVectorDataAt(unsigned char*& data, int row, int cols){
+//	int block = cols / 8;
+//	int ind = cols % 8;
+//
+//	unsigned char result = data[block] >> ind;
+//	return result % 2;
+//}
 
-	unsigned char result = data[row][block] >> ind;
-	return result % 2;
-}
 
-unsigned char getVectorDataAt(unsigned char*& data, int row, int cols){
-	int block = cols / 8;
-	int ind = cols % 8;
-
-	unsigned char result = data[block] >> ind;
-	return result % 2;
-}
-
-
-double* VectorBitDistance(unsigned char*& data, int dcol, double**& centers, int crow, int ccol){
+double* VectorBitDistance(unsigned char*& data, int dcol, double**& centers, int crow, int ccol, int**& dataMap){
 	//bsxfun(@minus,bsxfun(@minus,2*X*C',sum(X.^2,2)),sum(C.^2,2)');
 	int drow = 1;
 	double** tmpLeft = new double*[drow];
@@ -189,7 +238,11 @@ double* VectorBitDistance(unsigned char*& data, int dcol, double**& centers, int
 
 			double sum = 0;
 			for (int k = 0; k < dcol; k++){
-				sum += 2.0*getVectorDataAt(data, i, k) * centers[j][k];
+				int block = k / 8;
+				int ind = k % 8;
+				sum += 2.0*dataMap[data[block]][ind] * centers[j][k];
+
+				//sum += 2.0*getVectorDataAt(data, i, k) * centers[j][k];
 			}
 
 			tmpLeft[i][j] = sum;
@@ -202,7 +255,12 @@ double* VectorBitDistance(unsigned char*& data, int dcol, double**& centers, int
 	for (int i = 0; i < drow; i++){
 		double sum = 0;
 		for (int j = 0; j < dcol; j++){
-			sum += pow(getVectorDataAt(data, i, j), 2);
+			int block = j / 8;
+			int ind = j % 8;
+			int tmp = dataMap[data[j]][ind];
+
+			sum += tmp*tmp;
+			//sum += pow(getVectorDataAt(data, i, j), 2);
 		}
 
 		tmpXPowerSum[i] = sum;
@@ -225,7 +283,8 @@ double* VectorBitDistance(unsigned char*& data, int dcol, double**& centers, int
 
 	return tmpLeft[0];
 }
-double** BitDistance(unsigned char**& data,int drow,int dcol,double**& centers,int crow,int ccol){
+
+double** BitDistance(unsigned char**& data, int drow, int dcol, double**& centers, int crow, int ccol, int**& dataMap){
 	//bsxfun(@minus,bsxfun(@minus,2*X*C',sum(X.^2,2)),sum(C.^2,2)');
 	double** tmpLeft = new double*[drow];
 	for (int i = 0; i < drow; i++){
@@ -236,11 +295,16 @@ double** BitDistance(unsigned char**& data,int drow,int dcol,double**& centers,i
 		for (int j = 0; j < crow; j++){
 
 			double sum = 0;
+			//cout << "aaa:" << dataMap[0][0] << endl;
 			for (int k = 0; k < dcol; k++){
-				sum += 2.0*getDataAt(data,i,k) * centers[j][k];
+				//getData use search
+				int block = k / 8;
+				int ind = k % 8;
+				sum += (double)dataMap[data[i][block]][ind] * centers[j][k];
+				//sum += (double)getDataAt(data,i,k) * centers[j][k];
 			}
 
-			tmpLeft[i][j] = sum;
+			tmpLeft[i][j] = 2.0*sum;
 		}
 	}
 
@@ -250,7 +314,10 @@ double** BitDistance(unsigned char**& data,int drow,int dcol,double**& centers,i
 	for (int i = 0; i < drow; i++){
 		double sum = 0;
 		for (int j = 0; j < dcol; j++){
-			sum += pow(getDataAt(data, i, j), 2);
+			int block = j / 8;
+			int ind = j % 8;
+			sum += dataMap[data[i][block]][ind];
+			//sum += pow((int)getDataAt(data, i, j), 2);
 		}
 
 		tmpXPowerSum[i] = sum;
@@ -259,7 +326,11 @@ double** BitDistance(unsigned char**& data,int drow,int dcol,double**& centers,i
 	for (int i = 0; i < crow; i++){
 		double sum = 0;
 		for (int j = 0; j < ccol; j++){
-			sum += pow(centers[i][j], 2);
+			int block = j / 8;
+			int ind = j % 8;
+			int tmp = dataMap[data[i][block]][ind];
+			sum += tmp*tmp;
+			//sum += pow(centers[i][j], 2);
 		}
 
 		tmpYPower[i] = sum;

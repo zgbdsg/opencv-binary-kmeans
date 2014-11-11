@@ -415,7 +415,7 @@ int hahamain(){
 int main(){
 	clock_t start, stop;
 	string filedir = "..\\data";//mat文件的文件目录，此处设置的当前目录
-	string filename = "ORL_32x32";//mat文件的文件名
+	string filename = "COIL20";//mat文件的文件名
 
 	cout << "Start reading mat file!" << endl;
 	Mat readfea = DataRead(filedir, filename, "fea");
@@ -424,11 +424,43 @@ int main(){
 	Mat readgnd = DataRead(filedir, filename, "gnd");
 	cout << readgnd.cols << " " << readgnd.rows << endl;
 
+	//generate data map
+
+	int** dataMap = new int*[256];
+	for (int i = 0; i < 256; i++){
+		dataMap[i] = new int[8];
+
+		for (int j = 0; j < 8; j++){
+			dataMap[i][j] = (i >> j) % 2;
+			//cout << dataMap[i][j];
+		}
+		//cout << "\t";
+	}
+
 	/*计算 nclass*/
 	int nclass = FindNClass(readgnd);
 	cout << "nclass is " << nclass << endl;
 	Mat fea = NormalizeFea(readfea).t();
 
+	Mat lables = Mat::zeros(readfea.cols, 1, CV_64FC1);
+	float sum = 0;
+	for (int i = 0; i < 10; i++){
+		start = clock();
+		Kmeans(fea, nclass, lables, 10);
+		stop = clock();
+		cout << "Kmeans :" << 1.0*(stop - start) / CLOCKS_PER_SEC << "  seconds" << endl;
+		//cout << lables<<endl;
+		reindex(lables);
+		//cout << lables << endl;
+
+		Mat gndTranse = readgnd.t();
+		float AC = Evaluate(lables, gndTranse);
+		//cout << "FLANN  AC is  " << AC << endl;
+		cout << AC << endl;
+		sum += AC;
+	}
+
+	cout << "AC:"<< sum / 10 << endl;
 
 	/*使用 FLANN 提取属性*/
 	Mat newfea;
@@ -446,10 +478,13 @@ int main(){
 	cout << "FLANN :" << 1.0*(stop - start) / CLOCKS_PER_SEC << "  seconds" << endl;
 
 	flann_index.save("index");
+	//cout << indices.row(0) << endl;
 	indices.convertTo(indices, CV_64FC1);
+	//cout << indices.row(1) << endl;
 	//cout << indices << endl;
-	dists.convertTo(dists, CV_64FC1);
+	//dists.convertTo(dists, CV_64FC1);
 	newfea = indices.clone();
+	//cout << newfea.row(0) << endl;
 
 	Mat linefea(fea.rows, fea.cols, CV_32FC1);
 	linefea = Scalar::all(0);
@@ -458,12 +493,13 @@ int main(){
 	{
 		for (int j = 0; j < newfea.cols; j++)
 		{
-			int t = newfea.at<float>(i, j);
+			int t = newfea.at<double>(i, j);
+			//cout << t << " ";
 			//assert(t >= 0 && t< 11554);
 			//if (t >= 0 && t< newfea.cols)
 			//linefea.at<float>(i, t) = exp(-pow(dists.at<float>(i, j), 2));
 			linefea.at<float>(i, t) = 1;
-			//cout << i << "\t" << t << "\t";
+			//cout << i << "," << t << " ";
 		}
 
 		//cout << endl;
@@ -471,24 +507,62 @@ int main(){
 
 	//Mat result = saveDataAsBinary(linefea);
 	unsigned char** result = converToBinary(linefea);
+
 	int realcols = linefea.cols / 8;
 	if (linefea.cols % 8 != 0)
 		realcols += 1;
 
 	int* labs = new int[linefea.rows];
 
-	BitHartigan(result, linefea.rows, linefea.cols, nclass, labs, 10);
-	Mat lables = Mat::zeros(readfea.cols, 1, CV_64FC1);
-	for (int i = 0; i < linefea.rows; i++){
-		lables.at<double>(i, 0) = labs[i];
+	sum = 0;
+	for (int i = 0; i < 10; i++){
+		start = clock();
+		BitKmeans(result, linefea.rows, linefea.cols, nclass, labs, 10,dataMap);
+		stop = clock();
+		cout << "BitKmeans :" << 1.0*(stop - start) / CLOCKS_PER_SEC << "  seconds" << endl;
+		//	Mat lables = Mat::zeros(readfea.cols, 1, CV_64FC1);
+		for (int i = 0; i < linefea.rows; i++){
+			lables.at<double>(i, 0) = labs[i];
+		}
+
+		reindex(lables);
+
+		Mat gndTranse = readgnd.t();
+		float AC = Evaluate(lables, gndTranse);
+		//cout << "FLANN  AC is  " << AC << endl;
+		cout << AC << endl;
+		sum += AC;
 	}
 
-	reindex(lables);
+	cout<<"AC:" << sum / 10 << endl;
 
-	Mat gndTranse = readgnd.t();
-	float AC = Evaluate(lables, gndTranse);
-	//cout << "FLANN  AC is  " << AC << endl;
-	cout << AC << endl;
+	cout << "--------------------------" << endl;
+
+	int round = 10;
+	Mat labels;
+
+	sum = 0;
+	for (int k = 0; k < round; k++){
+
+
+		start = clock();
+		kmeans(linefea, nclass, labels,
+			TermCriteria(CV_TERMCRIT_EPS + CV_TERMCRIT_ITER, 1000, pow(10, -20)),
+			3, KMEANS_RANDOM_CENTERS);
+		stop = clock();
+		cout << "origin bit K-means :" << 1.0*(stop - start) / CLOCKS_PER_SEC << "  seconds" << endl;
+		//cout << 1.0*(stop - start) / CLOCKS_PER_SEC << ",";
+		labels.convertTo(labels, CV_64FC1);
+		reindex(labels);
+
+		Mat gndTranse = readgnd.t();
+		float AC = Evaluate(labels, gndTranse);
+		//cout << "kmeans AC is  " << AC << endl;
+		cout << AC << endl;
+		sum += AC;
+	}
+
+	cout << "AC:" << sum / 10 << endl;
 
 	int a = 0;
 	cin >> a;

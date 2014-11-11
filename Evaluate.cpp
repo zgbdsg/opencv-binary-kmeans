@@ -16,7 +16,7 @@ float Evaluate(Mat& labels, Mat& gnd)
 			sum++;
 	}
 
-	cout << "sum  :" << sum << endl;
+	//cout << "sum  :" << sum << endl;
 	float AC = (1.0*sum) / length;
 	return AC;
 }
