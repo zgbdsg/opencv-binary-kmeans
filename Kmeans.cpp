@@ -32,8 +32,11 @@ void Kmeans(Mat& data, int k, Mat& lables, int round){
 	Mat index = Mat::zeros(data.rows, 1, CV_64FC1);
 	Mat dist = Mat::zeros(data.rows, 1, CV_64FC1);
 
+	Mat oldCenters;
 	for (int r = 0; r < round; r++){
-		Mat distances = Matdistance(data, centers);
+		oldCenters = centers.clone();
+
+		Mat distances = Matdistance(data, oldCenters);
 
 		MatMin(distances, index, dist);
 
@@ -55,6 +58,19 @@ void Kmeans(Mat& data, int k, Mat& lables, int round){
 			tmpMat.copyTo(centers.row(i));
 		}
 
+		double sum = 0;
+		for (int i = 0; i < centers.rows; i++){
+			for (int j = 0; j < centers.cols; j++){
+				double tmp = centers.at<double>(i, j) - oldCenters.at<double>(i,j);
+				if (_isnan(tmp) != 0)
+					tmp = 0;
+				sum += tmp*tmp;
+			}
+		}
+
+		//cout << "round " << r << " delta cost " << sum << endl;
+		if (sum < 0.00001f)
+			break;
 	}
 
 	index.copyTo(lables);

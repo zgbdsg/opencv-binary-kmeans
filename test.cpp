@@ -415,7 +415,7 @@ int hahamain(){
 int main(){
 	clock_t start, stop;
 	string filedir = "..\\data";//mat文件的文件目录，此处设置的当前目录
-	string filename = "COIL20";//mat文件的文件名
+	string filename = "YaleB_32x32";//mat文件的文件名
 
 	cout << "Start reading mat file!" << endl;
 	Mat readfea = DataRead(filedir, filename, "fea");
@@ -444,29 +444,78 @@ int main(){
 
 	Mat lables = Mat::zeros(readfea.cols, 1, CV_64FC1);
 	float sum = 0;
+	float* AC = new float[10];
+	float* time = new float[10];
+
 	for (int i = 0; i < 10; i++){
 		start = clock();
-		Kmeans(fea, nclass, lables, 10);
+		Kmeans(fea, nclass, lables, 1000);
 		stop = clock();
-		cout << "Kmeans :" << 1.0*(stop - start) / CLOCKS_PER_SEC << "  seconds" << endl;
+		time[i] = 1.0*(stop - start) / CLOCKS_PER_SEC;
+		//cout << "Kmeans :" << 1.0*(stop - start) / CLOCKS_PER_SEC << "  seconds" << endl;
 		//cout << lables<<endl;
 		reindex(lables);
 		//cout << lables << endl;
 
 		Mat gndTranse = readgnd.t();
-		float AC = Evaluate(lables, gndTranse);
+		AC[i] = Evaluate(lables, gndTranse);
 		//cout << "FLANN  AC is  " << AC << endl;
-		cout << AC << endl;
-		sum += AC;
+		//cout << AC << endl;
+		sum += AC[i];
 	}
 
-	cout << "AC:"<< sum / 10 << endl;
+	cout << "Kmeans: " << endl;
+	for (int i = 0; i < 10; i++){
+		cout << AC[i] << endl;
+	}
+
+	cout << "----" << endl; 
+	for (int i = 0; i < 10; i++){
+		cout << time[i] << endl;
+	}
+	//cout << "AC:"<< sum / 10 << endl;
+
+	int round = 10;
+	Mat labels;
+
+	sum = 0;
+	fea.convertTo(fea, CV_32FC1);
+
+	for (int k = 0; k < round; k++){
+
+
+		start = clock();
+		kmeans(fea, nclass, labels,
+			TermCriteria(CV_TERMCRIT_EPS + CV_TERMCRIT_ITER, 1000, pow(10, -20)),
+			3, KMEANS_RANDOM_CENTERS);
+		stop = clock();
+		time[k] = 1.0*(stop - start) / CLOCKS_PER_SEC;
+		//cout << "origin K-means :" << 1.0*(stop - start) / CLOCKS_PER_SEC << "  seconds" << endl;
+		//cout << 1.0*(stop - start) / CLOCKS_PER_SEC << ",";
+		labels.convertTo(labels, CV_64FC1);
+		reindex(labels);
+
+		Mat gndTranse = readgnd.t();
+		AC[k] = Evaluate(labels, gndTranse);
+		//cout << "kmeans AC is  " << AC << endl;
+		//cout << AC[i] << endl;
+		sum += AC[k];
+	}
+
+	cout << "origin Kmeans: " << endl;
+	for (int i = 0; i < 10; i++){
+		cout << AC[i] << endl;
+	}
+	cout << "----" << endl;
+	for (int i = 0; i < 10; i++){
+		cout << time[i] << endl;
+	}
 
 	/*使用 FLANN 提取属性*/
 	Mat newfea;
 	int knnsize = fea.rows / 20;
 
-	fea.convertTo(fea, CV_32FC1);
+	//fea.convertTo(fea, CV_32FC1);
 	flann::Index flann_index(fea, cv::flann::LinearIndexParams(), cvflann::FLANN_DIST_MANHATTAN);
 
 	Mat indices(fea.rows, knnsize, CV_32FC1);
@@ -486,7 +535,7 @@ int main(){
 	newfea = indices.clone();
 	//cout << newfea.row(0) << endl;
 
-	Mat linefea(fea.rows, fea.cols, CV_32FC1);
+	Mat linefea(fea.rows, fea.rows, CV_32FC1);
 	linefea = Scalar::all(0);
 
 	for (int i = 0; i < newfea.rows; i++)
@@ -517,29 +566,39 @@ int main(){
 	sum = 0;
 	for (int i = 0; i < 10; i++){
 		start = clock();
-		BitKmeans(result, linefea.rows, linefea.cols, nclass, labs, 10,dataMap);
+		BitKmeans(result, linefea.rows, linefea.cols, nclass, labs, 1000,dataMap);
 		stop = clock();
-		cout << "BitKmeans :" << 1.0*(stop - start) / CLOCKS_PER_SEC << "  seconds" << endl;
+		time[i] = 1.0*(stop - start) / CLOCKS_PER_SEC;
+		//cout << "BitKmeans :" << 1.0*(stop - start) / CLOCKS_PER_SEC << "  seconds" << endl;
 		//	Mat lables = Mat::zeros(readfea.cols, 1, CV_64FC1);
-		for (int i = 0; i < linefea.rows; i++){
-			lables.at<double>(i, 0) = labs[i];
+		for (int j = 0; j < linefea.rows; j++){
+			lables.at<double>(j, 0) = labs[j];
 		}
 
 		reindex(lables);
 
 		Mat gndTranse = readgnd.t();
-		float AC = Evaluate(lables, gndTranse);
+		AC[i] = Evaluate(lables, gndTranse);
 		//cout << "FLANN  AC is  " << AC << endl;
-		cout << AC << endl;
-		sum += AC;
+		//cout << AC[i] << endl;
+		sum += AC[i];
 	}
 
-	cout<<"AC:" << sum / 10 << endl;
+	cout << "Bit Kmeans: " << endl;
+	for (int i = 0; i < 10; i++){
+		cout << AC[i] << endl;
+	}
+	cout << "----" << endl;
+	for (int i = 0; i < 10; i++){
+		cout << time[i] << endl;
+	}
+
+	//cout<<"AC:" << sum / 10 << endl;
 
 	cout << "--------------------------" << endl;
 
-	int round = 10;
-	Mat labels;
+	//int round = 10;
+	//Mat labels;
 
 	sum = 0;
 	for (int k = 0; k < round; k++){
@@ -550,19 +609,29 @@ int main(){
 			TermCriteria(CV_TERMCRIT_EPS + CV_TERMCRIT_ITER, 1000, pow(10, -20)),
 			3, KMEANS_RANDOM_CENTERS);
 		stop = clock();
-		cout << "origin bit K-means :" << 1.0*(stop - start) / CLOCKS_PER_SEC << "  seconds" << endl;
+		time[k] = 1.0*(stop - start) / CLOCKS_PER_SEC;
+		//cout << "origin bit K-means :" << 1.0*(stop - start) / CLOCKS_PER_SEC << "  seconds" << endl;
 		//cout << 1.0*(stop - start) / CLOCKS_PER_SEC << ",";
 		labels.convertTo(labels, CV_64FC1);
 		reindex(labels);
 
 		Mat gndTranse = readgnd.t();
-		float AC = Evaluate(labels, gndTranse);
+		AC[k] = Evaluate(labels, gndTranse);
 		//cout << "kmeans AC is  " << AC << endl;
-		cout << AC << endl;
-		sum += AC;
+		//cout << AC[k] << endl;
+		sum += AC[k];
 	}
 
-	cout << "AC:" << sum / 10 << endl;
+	cout << "origin bit Kmeans: " << endl;
+	for (int i = 0; i < 10; i++){
+		cout << AC[i] << endl;
+	}
+	cout << "----" << endl;
+	for (int i = 0; i < 10; i++){
+		cout << time[i] << endl;
+	}
+
+	//cout << "AC:" << sum / 10 << endl;
 
 	int a = 0;
 	cin >> a;

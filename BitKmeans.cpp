@@ -45,7 +45,23 @@ void BitKmeans(unsigned char**& data, int rows, int cols, int k, int*& lables, i
 	int* index = new int[rows];
 	double* dist = new double[rows];
 
+	double** oldCenters = new double*[k];
+	for (int i = 0; i < k; i++){
+		oldCenters[i] = new double[cols];
+		for (int j = 0; j < cols; j++){
+			oldCenters[i][j] = 0;
+		}
+	}
+
 	for (int r = 0; r < round; r++){
+
+		for (int i = 0; i < k; i++){
+
+			for (int j = 0; j < cols; j++){
+				oldCenters[i][j] = centers[i][j];
+			}
+		}
+
 		double** distances = BitDistance(data, rows, cols, centers, k, cols,dataMap);
 		//double** distances = KmeansBitDistance(data, rows, cols, centers, k, cols);
 
@@ -92,6 +108,26 @@ void BitKmeans(unsigned char**& data, int rows, int cols, int k, int*& lables, i
 			for (int j = 0; j < cols; j++){
 				centers[i][j] = centers[i][j] / cCount[i];
 			}
+		}
+
+		double sum = 0;
+		for (int i = 0; i < k; i++){
+
+			for (int j = 0; j < cols; j++){
+				double tmp = oldCenters[i][j] - centers[i][j];
+				
+				if (_isnan(tmp) != 0)
+					tmp = 0;
+
+				//cout << tmp << ",";
+				sum += tmp*tmp;
+			}
+			//cout << endl;
+		}
+
+		//cout << "round " << r << " delta cost " << sum << endl;
+		if (sum < 0.00001f){
+			break;
 		}
 	}
 
