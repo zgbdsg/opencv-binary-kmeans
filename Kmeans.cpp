@@ -54,8 +54,13 @@ void Kmeans(Mat& data, int k, Mat& lables, int round){
 		}
 		for (int i = 0; i < k; i++)
 		{
-			Mat tmpMat = 1.0*centers.row(i) / cCount[i];
-			tmpMat.copyTo(centers.row(i));
+			if (cCount[i] != 0){
+				Mat tmpMat = 1.0*centers.row(i) / cCount[i];
+				tmpMat.copyTo(centers.row(i));
+			}
+			else{
+				centers.row(i).setTo(Scalar(0));
+			}
 		}
 
 		double sum = 0;

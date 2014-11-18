@@ -415,7 +415,7 @@ int hahamain(){
 int main(){
 	clock_t start, stop;
 	string filedir = "..\\data";//mat文件的文件目录，此处设置的当前目录
-	string filename = "YaleB_32x32";//mat文件的文件名
+	string filename = "COIL20";//mat文件的文件名
 
 	cout << "Start reading mat file!" << endl;
 	Mat readfea = DataRead(filedir, filename, "fea");
@@ -446,7 +446,7 @@ int main(){
 	float sum = 0;
 	float* AC = new float[10];
 	float* time = new float[10];
-
+	/*
 	for (int i = 0; i < 10; i++){
 		start = clock();
 		Kmeans(fea, nclass, lables, 1000);
@@ -474,7 +474,7 @@ int main(){
 		cout << time[i] << endl;
 	}
 	//cout << "AC:"<< sum / 10 << endl;
-
+	
 	int round = 10;
 	Mat labels;
 
@@ -510,10 +510,12 @@ int main(){
 	for (int i = 0; i < 10; i++){
 		cout << time[i] << endl;
 	}
+	*/
 
 	/*使用 FLANN 提取属性*/
 	Mat newfea;
 	int knnsize = fea.rows / 20;
+	fea.convertTo(fea, CV_32FC1);
 
 	//fea.convertTo(fea, CV_32FC1);
 	flann::Index flann_index(fea, cv::flann::LinearIndexParams(), cvflann::FLANN_DIST_MANHATTAN);
@@ -575,6 +577,7 @@ int main(){
 			lables.at<double>(j, 0) = labs[j];
 		}
 
+		//cout << lables << endl;
 		reindex(lables);
 
 		Mat gndTranse = readgnd.t();
@@ -597,6 +600,7 @@ int main(){
 
 	cout << "--------------------------" << endl;
 
+	/*
 	//int round = 10;
 	//Mat labels;
 
@@ -632,7 +636,7 @@ int main(){
 	}
 
 	//cout << "AC:" << sum / 10 << endl;
-
+	*/
 	int a = 0;
 	cin >> a;
 

@@ -286,6 +286,7 @@ double* VectorBitDistance(unsigned char*& data, int dcol, double**& centers, int
 
 double** BitDistance(unsigned char**& data, int drow, int dcol, double**& centers, int crow, int ccol, int**& dataMap){
 	//bsxfun(@minus,bsxfun(@minus,2*X*C',sum(X.^2,2)),sum(C.^2,2)');
+	assert(dcol == ccol);
 	double** tmpLeft = new double*[drow];
 	for (int i = 0; i < drow; i++){
 		tmpLeft[i] = new double[crow];
@@ -296,6 +297,7 @@ double** BitDistance(unsigned char**& data, int drow, int dcol, double**& center
 
 			double sum = 0;
 			//cout << "aaa:" << dataMap[0][0] << endl;
+			//inner product
 			for (int k = 0; k < dcol; k++){
 				//getData use search
 				int block = k / 8;
@@ -326,11 +328,7 @@ double** BitDistance(unsigned char**& data, int drow, int dcol, double**& center
 	for (int i = 0; i < crow; i++){
 		double sum = 0;
 		for (int j = 0; j < ccol; j++){
-			int block = j / 8;
-			int ind = j % 8;
-			int tmp = dataMap[data[i][block]][ind];
-			sum += tmp*tmp;
-			//sum += pow(centers[i][j], 2);
+			sum += centers[i][j]*centers[i][j];
 		}
 
 		tmpYPower[i] = sum;

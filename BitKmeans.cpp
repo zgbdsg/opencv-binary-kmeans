@@ -33,7 +33,6 @@ void BitKmeans(unsigned char**& data, int rows, int cols, int k, int*& lables, i
 				centers[i][a] = dataMap[(int)data[tmp][block]][ind];
 				//centers[i][a] = getDataAt(data, tmp, a);
 			}
-
 			//data.row(random[i]).copyTo(centers.row(i));
 		}
 		else{
@@ -54,7 +53,7 @@ void BitKmeans(unsigned char**& data, int rows, int cols, int k, int*& lables, i
 	}
 
 	for (int r = 0; r < round; r++){
-
+		//cout << r << " ";
 		for (int i = 0; i < k; i++){
 
 			for (int j = 0; j < cols; j++){
@@ -106,7 +105,10 @@ void BitKmeans(unsigned char**& data, int rows, int cols, int k, int*& lables, i
 		for (int i = 0; i < k; i++){
 
 			for (int j = 0; j < cols; j++){
-				centers[i][j] = centers[i][j] / cCount[i];
+				if (cCount[i] != 0)
+					centers[i][j] = centers[i][j] / cCount[i];
+				else
+					centers[i][j] = 0;
 			}
 		}
 
@@ -125,12 +127,12 @@ void BitKmeans(unsigned char**& data, int rows, int cols, int k, int*& lables, i
 			//cout << endl;
 		}
 
-		//cout << "round " << r << " delta cost " << sum << endl;
-		if (sum < 0.00001f){
+		//cout << "round " << r << " delta cost " << sum << ";";
+		if (sum < 0.0000001f){
 			break;
 		}
 	}
-
+	//cout << endl;
 	for (int i = 0; i < rows; i++){
 		lables[i] = index[i];
 	}
