@@ -415,7 +415,7 @@ int hahamain(){
 int main(){
 	clock_t start, stop;
 	string filedir = "..\\data";//mat文件的文件目录，此处设置的当前目录
-	string filename = "COIL20";//mat文件的文件名
+	string filename = "USPS";//mat文件的文件名
 
 	cout << "Start reading mat file!" << endl;
 	Mat readfea = DataRead(filedir, filename, "fea");
@@ -426,9 +426,9 @@ int main(){
 
 	//generate data map
 
-	int** dataMap = new int*[256];
+	double** dataMap = new double*[256];
 	for (int i = 0; i < 256; i++){
-		dataMap[i] = new int[8];
+		dataMap[i] = new double[8];
 
 		for (int j = 0; j < 8; j++){
 			dataMap[i][j] = (i >> j) % 2;
@@ -437,17 +437,31 @@ int main(){
 		//cout << "\t";
 	}
 
+	int round = 10;
+
 	/*计算 nclass*/
 	int nclass = FindNClass(readgnd);
 	cout << "nclass is " << nclass << endl;
-	Mat fea = NormalizeFea(readfea).t();
+	//Mat fea = NormalizeFea(readfea).t();
+	Mat fea = MaxNormalizeFea(readfea).t();
+
+	//for (int i = 0; i < fea.rows; i++){
+	//	double tmpsum = 0;
+	//	for (int j = 0; j < fea.cols; j++){
+	//		tmpsum += fea.at<double>(i,j);
+	//	}
+
+	//	cout << tmpsum << ",";
+	//}
+	//cout << endl;
 
 	Mat lables = Mat::zeros(readfea.cols, 1, CV_64FC1);
 	float sum = 0;
-	float* AC = new float[10];
-	float* time = new float[10];
-	/*
-	for (int i = 0; i < 10; i++){
+	float* AC = new float[round];
+	float* time = new float[round];
+	
+	srand(0);
+	for (int i = 0; i < round; i++){
 		start = clock();
 		Kmeans(fea, nclass, lables, 1000);
 		stop = clock();
@@ -465,16 +479,17 @@ int main(){
 	}
 
 	cout << "Kmeans: " << endl;
-	for (int i = 0; i < 10; i++){
+	for (int i = 0; i < round; i++){
 		cout << AC[i] << endl;
 	}
 
 	cout << "----" << endl; 
-	for (int i = 0; i < 10; i++){
+	for (int i = 0; i < round; i++){
 		cout << time[i] << endl;
 	}
 	//cout << "AC:"<< sum / 10 << endl;
 	
+	/*
 	int round = 10;
 	Mat labels;
 
@@ -519,12 +534,13 @@ int main(){
 
 	//fea.convertTo(fea, CV_32FC1);
 	flann::Index flann_index(fea, cv::flann::LinearIndexParams(), cvflann::FLANN_DIST_MANHATTAN);
+	//flann::Index flann_index(fea, cv::flann::LinearIndexParams(), cvflann::FLANN_DIST_EUCLIDEAN);
 
 	Mat indices(fea.rows, knnsize, CV_32FC1);
 	Mat dists(fea.rows, knnsize, CV_32FC1);
 	//Mat searchrow = fea.row(i);
 	start = clock();
-	flann_index.knnSearch(fea, indices, dists, knnsize, cv::flann::SearchParams(64));
+	flann_index.knnSearch(fea, indices, dists, knnsize, cv::flann::SearchParams(1024));
 	stop = clock();
 	cout << "FLANN :" << 1.0*(stop - start) / CLOCKS_PER_SEC << "  seconds" << endl;
 
@@ -544,16 +560,12 @@ int main(){
 	{
 		for (int j = 0; j < newfea.cols; j++)
 		{
+			if (i == j)
+				continue;
 			int t = newfea.at<double>(i, j);
-			//cout << t << " ";
-			//assert(t >= 0 && t< 11554);
-			//if (t >= 0 && t< newfea.cols)
-			//linefea.at<float>(i, t) = exp(-pow(dists.at<float>(i, j), 2));
 			linefea.at<float>(i, t) = 1;
-			//cout << i << "," << t << " ";
 		}
 
-		//cout << endl;
 	}
 
 	//Mat result = saveDataAsBinary(linefea);
@@ -566,7 +578,8 @@ int main(){
 	int* labs = new int[linefea.rows];
 
 	sum = 0;
-	for (int i = 0; i < 10; i++){
+	srand(1);
+	for (int i = 0; i < round; i++){
 		start = clock();
 		BitKmeans(result, linefea.rows, linefea.cols, nclass, labs, 1000,dataMap);
 		stop = clock();
@@ -588,11 +601,11 @@ int main(){
 	}
 
 	cout << "Bit Kmeans: " << endl;
-	for (int i = 0; i < 10; i++){
+	for (int i = 0; i < round; i++){
 		cout << AC[i] << endl;
 	}
 	cout << "----" << endl;
-	for (int i = 0; i < 10; i++){
+	for (int i = 0; i < round; i++){
 		cout << time[i] << endl;
 	}
 

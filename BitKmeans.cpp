@@ -1,6 +1,6 @@
 #include"common.h"
 
-void BitKmeans(unsigned char**& data, int rows, int cols, int k, int*& lables, int round, int**& dataMap){
+void BitKmeans(unsigned char**& data, int rows, int cols, int k, int*& lables, int round, double**& dataMap){
 	// centers cols is 8 size of data
 	int* random = new int[k];
 	int* randIndex = new int[k];
@@ -14,7 +14,6 @@ void BitKmeans(unsigned char**& data, int rows, int cols, int k, int*& lables, i
 		centers[i] = new double[cols];
 	}
 
-
 	for (int i = 0; i < k; i++){
 		cCount[i] = 0;
 		//random[i] = i;
@@ -22,24 +21,21 @@ void BitKmeans(unsigned char**& data, int rows, int cols, int k, int*& lables, i
 
 		int tmp = rand() % rows;
 
-		//cout << "aaa:" << dataMap[0][0] << endl;
-
 		if (randomSet.find(tmp) == randomSet.end()){
 			random[i] = tmp;
 
-			for (int a = 0; a < cols; a++){
-				int block = a / 8;
-				int ind = a % 8;
-				centers[i][a] = dataMap[(int)data[tmp][block]][ind];
-				//centers[i][a] = getDataAt(data, tmp, a);
+			for (int x = 0; x < cols / 8; x++){
+				memcpy(&centers[i][x * 8], &dataMap[data[tmp][x]][0], 8);
 			}
-			//data.row(random[i]).copyTo(centers.row(i));
+			//cout << tmp << ",";
 		}
 		else{
 			i--;
 		}
 
 	}
+
+	//cout << endl;
 
 	int* index = new int[rows];
 	double* dist = new double[rows];
@@ -52,6 +48,8 @@ void BitKmeans(unsigned char**& data, int rows, int cols, int k, int*& lables, i
 		}
 	}
 
+	double* datapower = dataPower(data,rows,cols,dataMap);
+
 	for (int r = 0; r < round; r++){
 		//cout << r << " ";
 		for (int i = 0; i < k; i++){
@@ -61,7 +59,10 @@ void BitKmeans(unsigned char**& data, int rows, int cols, int k, int*& lables, i
 			}
 		}
 
-		double** distances = BitDistance(data, rows, cols, centers, k, cols,dataMap);
+		double* centerpower = centersPower(centers, k, cols);
+
+		double** distances = BitDistance(data, rows, cols, centers, k, cols,dataMap,datapower,centerpower);
+
 		//double** distances = KmeansBitDistance(data, rows, cols, centers, k, cols);
 
 		for (int i = 0; i < rows; i++){
@@ -91,15 +92,11 @@ void BitKmeans(unsigned char**& data, int rows, int cols, int k, int*& lables, i
 			int a = index[j];
 			cCount[a] ++;
 
-			for (int x = 0; x < cols; x++){
-
-				int block = x / 8;
-				int ind = x % 8;
-
-				centers[a][x] += dataMap[data[j][block]][ind];
-
-				//centers[a][x] += getDataAt(data, j, x);
+			for (int x = 0; x < cols / 8; x++){
+				for (int k = 0; k < 8;k++)
+					centers[a][x * 8+k] += dataMap[data[j][x]][k];
 			}
+
 		}
 
 		for (int i = 0; i < k; i++){
@@ -138,8 +135,9 @@ void BitKmeans(unsigned char**& data, int rows, int cols, int k, int*& lables, i
 	}
 }
 
+/***********************************************************************************************************/
 
-double** KmeansBitDistance(unsigned char**& data, int drow, int dcol, double**& centers, int crow, int ccol, int**& dataMap){
+double** KmeansBitDistance(unsigned char**& data, int drow, int dcol, double**& centers, int crow, int ccol, double**& dataMap){
 	int realcols = dcol / 8;
 	double** dis = new double*[drow];
 	for (int i = 0; i < drow; i++){
